@@ -68,10 +68,10 @@ int main()
 	}
 
 	// make VAO
-	unsigned int* VAO = makeVAO(trashcan);
+	unsigned int ** VAOs = makeVAOs(trashcan, 3);
 
 	// render loop
-	render(window, shaderPrograms, VAO);
+	render(window, shaderPrograms, *VAOs, 3);
 
 	// garbage collection
 	emptyTrashCan(trashcan);
@@ -244,7 +244,7 @@ unsigned int * makeShaderProgram(unsigned int* vShader, unsigned int* fShader, D
 //-------------------------------------------------------------------
 // render loop
 //-------------------------------------------------------------------
-void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO)
+void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int numVAOs)
 {
 	int frag = 0;
 	int * fragPtr = &frag;
@@ -263,10 +263,13 @@ void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO)
 		// draw vertices
 		glUseProgram(*shaderProg[frag]);
 
-		glBindVertexArray(*VAO);
-		glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
-
+		for (int i = 0; i < numVAOs; i++)
+		{
+			glBindVertexArray(VAO[i]);
+			glDrawArrays(GL_TRIANGLES, 0, 3);
+			glBindVertexArray(0);
+		}
+		
 		// check and call events and swap the buffers
 		glfwSwapBuffers(win);
 		glfwPollEvents();
@@ -276,50 +279,67 @@ void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO)
 //-------------------------------------------------------------------
 // vertex data :: buffer(s) :: vertex attributes
 //-------------------------------------------------------------------
-unsigned int * makeVAO(DynArr* trash)
+unsigned int ** makeVAOs(DynArr* trash, int numVAOs)
 {
 	// vertex data
-	float vertices[] = {
+	float triangle1[] = {
+		 // First Triangle
 		 0.00f,	 0.50f,	 0.00f,	// 0
 		-0.25f,	 0.00f,	 0.00f,	// 1
 		 0.25f,	 0.00f,	 0.00f,	// 2
+	};
+
+	float triangle2[] = {
+		// Second Triangle
+		-0.25f,	 0.00f,	 0.00f,	// 1
 		-0.50f,	-0.50f,	 0.00f,	// 3
-		 0.00f,	-0.50f,	 0.00f,	// 4
-		 0.50f,	-0.50f,	 0.00f	// 5
+		0.00f,	-0.50f,	 0.00f,	// 4
 	};
-	// index data
-	unsigned int indices[] =
+
+	float triangle3[] = {
+		// Third Triangle
+		0.25f,	 0.00f,	 0.00f,	// 2
+		0.00f,	-0.50f,	 0.00f,	// 4
+		0.50f,	-0.50f,	 0.00f	// 5
+	};
+
+	float * triangles[]
 	{
-		0, 1, 2,
-		1, 3, 4,
-		2, 4, 5
+		triangle1,
+		triangle2,
+		triangle3
 	};
 
-	// buffers
-	unsigned int * VAO = NULL;
-	VAO = new unsigned int;
-	addDynArr(trash, VAO);
+	unsigned int * VAOs = NULL;
+	VAOs = new unsigned int[3];
 
-	unsigned int VBO, EBO;
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
+	addDynArr(trash, VAOs);
 
-	// generate and bind vertex array object
-	glGenVertexArrays(1, VAO);
-	glBindVertexArray(*VAO);
+	unsigned int VBOs[3];// , VAOs[3]; // , EBO;
 
-	// copy vertices into a buffer for OpenGL to use
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	// generate vertex arrays and buffers
+	glGenVertexArrays(numVAOs, VAOs);
+	glGenBuffers(numVAOs, VBOs);
+	//glGenBuffers(1, &EBO);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	for (int i = 0; i < numVAOs; i++)
+	{
+		// bind vertex array object
+		glBindVertexArray(VAOs[i]);
 
-	// set the vertex attributes pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+		// copy vertices into a buffer for OpenGL to use
+		glBindBuffer(GL_ARRAY_BUFFER, VBOs[i]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(triangles)*3, triangles[i], GL_STATIC_DRAW);
 
-	return VAO;
+		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+		// set the vertex attributes pointers
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+	}
+
+	return &VAOs;
 }
 
 //-------------------------------------------------------------------

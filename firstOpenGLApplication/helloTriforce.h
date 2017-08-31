@@ -13,8 +13,8 @@ GLFWwindow* makeWindow(int width, int height, char* name);										// create wi
 void initGLAD();																				// initialize GLAD to manage function pointers for OpenGL
 unsigned int * makeShader(const char** ShaderSrc, int i, DynArr* trash);						// creates a shader given a shader source
 unsigned int * makeShaderProgram(unsigned int* vShader, unsigned int* fShader, DynArr* trash);
-unsigned int * makeVAO(DynArr* trash);
-void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO);
+unsigned int ** makeVAOs(DynArr* trash, int numVAOs);
+void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int numVAOs);
 void emptyTrashCan(DynArr * tc);
 
 #endif
