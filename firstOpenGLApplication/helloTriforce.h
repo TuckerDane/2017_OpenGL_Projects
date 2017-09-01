@@ -34,7 +34,7 @@ unsigned int ** makeVAOs(DynArr* trash, int numVAOs);											// creates VAOs
 
 // RENDERING
 //---------------------------------
-void processInput(GLFWwindow *window, int * fPtr);												// processes when keys are pressed/released and responds
+void processInput(GLFWwindow *window, int * fPtr, int *tPtr);									// processes when keys are pressed/released and responds
 void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int numVAOs);		// render loop
 
 //	GARBAGE COLLECTION
