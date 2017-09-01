@@ -282,21 +282,21 @@ unsigned int ** makeVAOs(DynArr* trash, int numVAOs)
 	// vertex data
 	//---------------------------------
 
-	// first triangle
+	// first triangle (Top)
 	float triangle1[] = {
 		0.00f,	0.50f,	0.00f,
 		-0.25f,	0.00f,	0.00f,
 		0.25f, 0.00f,	0.00f
 	};
 
-	//	second triangle
+	//	second triangle (Left)
 	float triangle2[] = {
 		-0.25f,	 0.00f,	0.00f,
 		-0.50f,	-0.50f,	0.00f,
-		0.05f, -0.50f,	0.00f
+		 0.00f, -0.50f,	0.00f
 	};
 
-	//	third triangle
+	//	third triangle (Right)
 	float triangle3[] = {
 		0.25f,	 0.00f,	0.00f,
 		0.00f,	-0.50f,	0.00f,
@@ -348,13 +348,19 @@ unsigned int ** makeVAOs(DynArr* trash, int numVAOs)
 //	processes when keys are pressed/released and responds
 //
 //	@param: window		window that is rendered to
-//	@param: fPtr		pointer to an integer whcih switches which
+//	@param: fPtr		pointer to an integer that switches which
 //						frag shader is used inside of the render loop
 //							0 == Blue
 //							1 == Yellow
 //							2 == Red
+//	@param:	tPtr		pointer to an integer that switches which 
+//						triangle is being transformed inside of the
+//						render loop
+//							W == Top triangle (triangle 1)
+//							A == Left Triangle (triangle 2)
+//							D == Right Triangle (triangle 3)
 //-------------------------------------------------------------------
-void processInput(GLFWwindow *window, int * fPtr)
+void processInput(GLFWwindow *window, int * fPtr, int * tPtr)
 {
 	// if the user presses ESCAPE, close the window and exit rendering
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -379,6 +385,25 @@ void processInput(GLFWwindow *window, int * fPtr)
 	else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
 	{
 		*fPtr = 2;
+	}
+
+	// change between triangles
+	//---------------------------------
+
+	// if the user presses 'W', switch to the Top Triangle
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		*tPtr = 0;
+	}
+	// else if the user presses 'A', switch to the Left Triangle
+	else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		*tPtr = 1;
+	}
+	// else if the user presses 'D', switch to the Right Triangle
+	else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		*tPtr = 2;
 	}
 
 	// change between polygon and fill
@@ -410,30 +435,67 @@ void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int 
 	//---------------------------------
 	int currentFrag = 0;
 	int * currentFragPtr = &currentFrag;
+	int prevFrag = 0;
 
+	// determines which triangle is selected for manipulation
+	//---------------------------------
+	int currentTriangle = 0;
+	int * currentTriPtr = &currentTriangle;
+	int prevTriangle = 0;
+
+	// holds which triangle is which color
+	//---------------------------------
+	int triangleColors[3] = {
+		0,	1,	2				// colors	 (0 = Blue,	1 = Yellow, 2 = Red)
+	};
+
+	//---------------------------------
 	// render loop
 	//---------------------------------
 	while (!glfwWindowShouldClose(win))
 	{
 		// process state changes via input
-		processInput(win, currentFragPtr);
+		//---------------------------------
+		processInput(win, currentFragPtr, currentTriPtr);
+
+		// set the color of the current triangle selected
+		//---------------------------------
+
+		// Same Triangle
+		if (currentTriangle == prevTriangle)
+		{
+			// Different Color
+			if (currentFrag != prevFrag)
+			{
+				triangleColors[currentTriangle] = currentFrag;		// change the color of the current triangle
+				prevFrag = currentFrag;								// and update the previously selected color
+			}
+		}
+		// Different Triangle
+		else // (currentTriangle != prevTriangle)
+		{
+			prevFrag = triangleColors[currentTriangle];	
+			currentFrag = prevFrag;				
+			prevTriangle = currentTriangle;		
+		}
 
 		// render
+		//---------------------------------
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		// determine which shader program to draw with
-		glUseProgram(*shaderProg[currentFrag]);
-
 		// draw to the window buffer
+		//---------------------------------
 		for (int i = 0; i < numVAOs; i++)
 		{
+			glUseProgram(*shaderProg[triangleColors[i]]);	// determine which shader program to draw with
 			glBindVertexArray(VAO[i]);
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 			glBindVertexArray(0);
 		}
 		
 		// check and call events and swap the buffers
+		//---------------------------------
 		glfwSwapBuffers(win);
 		glfwPollEvents();
 	}
