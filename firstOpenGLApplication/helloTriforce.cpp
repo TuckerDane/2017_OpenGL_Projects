@@ -39,25 +39,28 @@ const char *vertexShaderSource = "#version 330 core\n"
 // blue fragment shader
 const char *fragmentShader0Source = "#version 330 core\n"
 	"out vec4 FragColor;\n"
+	"uniform float saturation;\n"
 	"void main()\n"
 	"{\n"
-	"   FragColor = vec4(0.0f, 0.0f, 1.0f, 1.0f);\n"
+	"   FragColor = vec4(0.0f, 0.0f, saturation, 1.0f);\n"
 	"}\n\0";
 
 // yellow fragment shader
 const char *fragmentShader1Source = "#version 330 core\n"
 "out vec4 FragColor;\n"
+"uniform float saturation;\n"
 "void main()\n"
 "{\n"
-"   FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
+"   FragColor = vec4(saturation, saturation, 0.0f, 1.0f);\n"
 "}\n\0";
 
 // red fragment shader
 const char *fragmentShader2Source = "#version 330 core\n"
 "out vec4 FragColor;\n"
+"uniform float saturation;\n"
 "void main()\n"
 "{\n"
-"   FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+"   FragColor = vec4(saturation, 0.0f, 0.0f, 1.0f);\n"
 "}\n\0";
 
 // white fragment shader
@@ -369,8 +372,12 @@ unsigned int ** makeVAOs(DynArr* trash, int numVAOs)
 //							W == Top triangle (triangle 1)
 //							A == Left Triangle (triangle 2)
 //							D == Right Triangle (triangle 3)
+//	@param:	bPtr		pointer to a int which determines if
+//						blink is on/off
+//							0 == off
+//							1 == on
 //-------------------------------------------------------------------
-void processInput(GLFWwindow *window, int * fPtr, int * tPtr)
+void processInput(GLFWwindow *window, int * fPtr, int * tPtr, int * bPtr)
 {
 	// if the user presses ESCAPE, close the window and exit rendering
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -438,6 +445,20 @@ void processInput(GLFWwindow *window, int * fPtr, int * tPtr)
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
+
+	// turn blink on/off
+	//---------------------------------
+
+	// if the user presses 'B', switch to Blink Mode
+	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
+	{
+		*bPtr = 1;
+	}
+	// else if user presses "V", switch to Solid Mode
+	else if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
+	{
+		*bPtr = 0;
+	}
 }
 
 //-------------------------------------------------------------------
@@ -462,6 +483,13 @@ void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int 
 	int * currentTriPtr = &currentTriangle;
 	int prevTriangle = 0;
 
+	// turns blinking off and on
+	//---------------------------------
+	int blink = 0;
+	int * blinkPtr = &blink;
+
+	float satValue = 1.0f;
+
 	// holds which triangle is which color
 	//---------------------------------
 	int triangleColors[3] = {
@@ -475,11 +503,23 @@ void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int 
 	{
 		// process state changes via input
 		//---------------------------------
-		processInput(win, currentFragPtr, currentTriPtr);
+		processInput(win, currentFragPtr, currentTriPtr, blinkPtr);
+
+		// determine current color saturation
+		//---------------------------------
+		if (blink == 1)
+		{
+			float timeValue = glfwGetTime();				// used to create blinking effect
+			satValue = (sin(10 * timeValue) / 2.0) + 0.5f;	// rate of blinking effect
+		}
+		else // (blink != 1)
+		{
+			satValue = 1.0f;
+		}
+		int vertexSatLocation = -1;							// initialize vertexSatLocation
 
 		// set the color of the current triangle selected
 		//---------------------------------
-
 		// Same Triangle
 		if (currentTriangle == prevTriangle)
 		{
@@ -580,6 +620,8 @@ void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int 
 			for (int i = 0; i < numVAOs; i++)
 			{
 				glUseProgram(*shaderProg[triangleColors[i]]);	// determine which shader program to draw with
+				vertexSatLocation = glGetUniformLocation(*shaderProg[triangleColors[i]], "saturation");
+				glUniform1f(vertexSatLocation, satValue);
 				glBindVertexArray(VAO[i]);
 				glDrawArrays(GL_TRIANGLES, 0, 3);
 				glBindVertexArray(0);
