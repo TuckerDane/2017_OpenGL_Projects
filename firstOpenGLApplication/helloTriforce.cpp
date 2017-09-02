@@ -37,7 +37,7 @@ const char *vertexShaderSource = "#version 330 core\n"
 	"}\0";
 
 // blue fragment shader
-const char *fragmentShader1Source = "#version 330 core\n"
+const char *fragmentShader0Source = "#version 330 core\n"
 	"out vec4 FragColor;\n"
 	"void main()\n"
 	"{\n"
@@ -45,7 +45,7 @@ const char *fragmentShader1Source = "#version 330 core\n"
 	"}\n\0";
 
 // yellow fragment shader
-const char *fragmentShader2Source = "#version 330 core\n"
+const char *fragmentShader1Source = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
@@ -53,7 +53,7 @@ const char *fragmentShader2Source = "#version 330 core\n"
 "}\n\0";
 
 // red fragment shader
-const char *fragmentShader3Source = "#version 330 core\n"
+const char *fragmentShader2Source = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
@@ -61,7 +61,7 @@ const char *fragmentShader3Source = "#version 330 core\n"
 "}\n\0";
 
 // white fragment shader
-const char *fragmentShader4Source = "#version 330 core\n"
+const char *fragmentShader3Source = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
@@ -87,10 +87,10 @@ int main()
 	//---------------------------------
 	unsigned int * vertexShader = makeShader(&vertexShaderSource, 0, trashcan);		// vertex shader
 	unsigned int * fragmentShaders[4];												// array to store the fragmentShaders
-	fragmentShaders[0] = makeShader(&fragmentShader1Source, 1, trashcan);			// fragment shaders assigned to array
-	fragmentShaders[1] = makeShader(&fragmentShader2Source, 1, trashcan);
-	fragmentShaders[2] = makeShader(&fragmentShader3Source, 1, trashcan);
-	fragmentShaders[3] = makeShader(&fragmentShader4Source, 1, trashcan);
+	fragmentShaders[0] = makeShader(&fragmentShader0Source, 1, trashcan);			// fragment shaders assigned to array
+	fragmentShaders[1] = makeShader(&fragmentShader1Source, 1, trashcan);
+	fragmentShaders[2] = makeShader(&fragmentShader2Source, 1, trashcan);
+	fragmentShaders[3] = makeShader(&fragmentShader3Source, 1, trashcan);
 
 	// make shader program
 	//---------------------------------
