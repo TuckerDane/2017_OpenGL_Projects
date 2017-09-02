@@ -60,6 +60,14 @@ const char *fragmentShader3Source = "#version 330 core\n"
 "   FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
 "}\n\0";
 
+// white fragment shader
+const char *fragmentShader4Source = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"   FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
+"}\n\0";
+
 int main()
 {
 	// trashcan used for dynamic memory cleanup
@@ -78,15 +86,16 @@ int main()
 	// make shaders
 	//---------------------------------
 	unsigned int * vertexShader = makeShader(&vertexShaderSource, 0, trashcan);		// vertex shader
-	unsigned int * fragmentShaders[3];												// array to store the fragmentShaders
+	unsigned int * fragmentShaders[4];												// array to store the fragmentShaders
 	fragmentShaders[0] = makeShader(&fragmentShader1Source, 1, trashcan);			// fragment shaders assigned to array
 	fragmentShaders[1] = makeShader(&fragmentShader2Source, 1, trashcan);
 	fragmentShaders[2] = makeShader(&fragmentShader3Source, 1, trashcan);
+	fragmentShaders[3] = makeShader(&fragmentShader4Source, 1, trashcan);
 
 	// make shader program
 	//---------------------------------
-	unsigned int * shaderPrograms[3];
-	for (int i = 0; i < 3; i++)
+	unsigned int * shaderPrograms[4];
+	for (int i = 0; i < 4; i++)
 	{
 		shaderPrograms[i] = makeShaderProgram(vertexShader, fragmentShaders[i], trashcan);	// linking fragment shader(s) to vertex shader(s)
 	}
@@ -353,6 +362,7 @@ unsigned int ** makeVAOs(DynArr* trash, int numVAOs)
 //							0 == Blue
 //							1 == Yellow
 //							2 == Red
+//							3 == White
 //	@param:	tPtr		pointer to an integer that switches which 
 //						triangle is being transformed inside of the
 //						render loop
@@ -387,6 +397,15 @@ void processInput(GLFWwindow *window, int * fPtr, int * tPtr)
 		*fPtr = 2;
 	}
 
+	/* 
+
+	//else if the user presses '4', switch to the White Shader
+	else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
+	{
+		*fPtr = 3;
+	}
+																*/
+
 	// change between triangles
 	//---------------------------------
 
@@ -409,7 +428,7 @@ void processInput(GLFWwindow *window, int * fPtr, int * tPtr)
 	// change between polygon and fill
 	//---------------------------------
 
-	// if the user presses 'P', switch to Polygone (wireframe) Mode
+	// if the user presses 'P', switch to Polygon (wireframe) Mode
 	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -486,12 +505,85 @@ void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int 
 
 		// draw to the window buffer
 		//---------------------------------
-		for (int i = 0; i < numVAOs; i++)
+
+		// Change the color of the selected triangle to White when selected
+
+		// Top Triangle
+		if ((glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS))
 		{
-			glUseProgram(*shaderProg[triangleColors[i]]);	// determine which shader program to draw with
-			glBindVertexArray(VAO[i]);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-			glBindVertexArray(0);
+			for (int i = 0; i < numVAOs; i++)
+			{
+				if (i == 0)
+				{
+					glUseProgram(*shaderProg[3]);					// use the white shader on the top triangle
+					glBindVertexArray(VAO[i]);
+					glDrawArrays(GL_TRIANGLES, 0, 3);
+					glBindVertexArray(0);
+
+				}
+				else
+				{
+					glUseProgram(*shaderProg[triangleColors[i]]);	// and the correct shaders on the others
+					glBindVertexArray(VAO[i]);
+					glDrawArrays(GL_TRIANGLES, 0, 3);
+					glBindVertexArray(0);
+				}
+			}
+		}
+		// If the Left Triangle is currently being selected
+		else if ((glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS))
+		{
+			for (int i = 0; i < numVAOs; i++)
+			{
+				if (i == 1)
+				{
+					glUseProgram(*shaderProg[3]);					// use the white shader on the left triangle
+					glBindVertexArray(VAO[i]);
+					glDrawArrays(GL_TRIANGLES, 0, 3);
+					glBindVertexArray(0);
+
+				}
+				else
+				{
+					glUseProgram(*shaderProg[triangleColors[i]]);	// and the correct shaders on the others
+					glBindVertexArray(VAO[i]);
+					glDrawArrays(GL_TRIANGLES, 0, 3);
+					glBindVertexArray(0);
+				}
+			}
+		}
+		// Right Triangle
+		else if ((glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS))
+		{
+			for (int i = 0; i < numVAOs; i++)
+			{
+				if (i == 2)
+				{
+					glUseProgram(*shaderProg[3]);					// use the white shader on the right triangle
+					glBindVertexArray(VAO[i]);
+					glDrawArrays(GL_TRIANGLES, 0, 3);
+					glBindVertexArray(0);
+
+				}
+				else
+				{
+					glUseProgram(*shaderProg[triangleColors[i]]);	// and the correct shaders on the others
+					glBindVertexArray(VAO[i]);
+					glDrawArrays(GL_TRIANGLES, 0, 3);
+					glBindVertexArray(0);
+				}
+			}
+		}
+		// No triangle currently being selected; Render normally
+		else
+		{
+			for (int i = 0; i < numVAOs; i++)
+			{
+				glUseProgram(*shaderProg[triangleColors[i]]);	// determine which shader program to draw with
+				glBindVertexArray(VAO[i]);
+				glDrawArrays(GL_TRIANGLES, 0, 3);
+				glBindVertexArray(0);
+			}
 		}
 		
 		// check and call events and swap the buffers
