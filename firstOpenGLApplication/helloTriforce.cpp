@@ -449,13 +449,13 @@ void processInput(GLFWwindow *window, int * fPtr, int * tPtr, int * bPtr)
 	// turn blink on/off
 	//---------------------------------
 
-	// if the user presses 'B', switch to Blink Mode
+	// if the user presses 'B', switch to increase Saturation
 	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
 	{
 		*bPtr = 1;
 	}
-	// else if user presses "V", switch to Solid Mode
-	else if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
+	// else if user presses "V", switch to decrease Saturation
+	else if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
 	{
 		*bPtr = 0;
 	}
@@ -504,19 +504,6 @@ void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int 
 		// process state changes via input
 		//---------------------------------
 		processInput(win, currentFragPtr, currentTriPtr, blinkPtr);
-
-		// determine current color saturation
-		//---------------------------------
-		if (blink == 1)
-		{
-			float timeValue = glfwGetTime();				// used to create blinking effect
-			satValue = (sin(10 * timeValue) / 2.0) + 0.5f;	// rate of blinking effect
-		}
-		else // (blink != 1)
-		{
-			satValue = 1.0f;
-		}
-		int vertexSatLocation = -1;							// initialize vertexSatLocation
 
 		// set the color of the current triangle selected
 		//---------------------------------
@@ -617,14 +604,37 @@ void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int 
 		// No triangle currently being selected; Render normally
 		else
 		{
-			for (int i = 0; i < numVAOs; i++)
+			// determine current color saturation
+			//---------------------------------
+			int vertexSatLocation = -1;												// initialize vertexSatLocation
+
+			// change saturation
+			if (blink == 1)
 			{
-				glUseProgram(*shaderProg[triangleColors[i]]);	// determine which shader program to draw with
-				vertexSatLocation = glGetUniformLocation(*shaderProg[triangleColors[i]], "saturation");
-				glUniform1f(vertexSatLocation, satValue);
-				glBindVertexArray(VAO[i]);
-				glDrawArrays(GL_TRIANGLES, 0, 3);
-				glBindVertexArray(0);
+				float timeValue = glfwGetTime();									// used to create saturation change
+				satValue = (sin((1.5 * timeValue) + satValue) / 2.0) + 0.5f;		// rate of saturation change
+
+				for (int i = 0; i < numVAOs; i++)
+				{
+					glUseProgram(*shaderProg[triangleColors[i]]);					// determine which shader program to draw with
+					vertexSatLocation = glGetUniformLocation(*shaderProg[triangleColors[i]], "saturation");
+					glUniform1f(vertexSatLocation, satValue);
+					glBindVertexArray(VAO[i]);
+					glDrawArrays(GL_TRIANGLES, 0, 3);
+					glBindVertexArray(0);
+				}
+			}
+			else // (blink != 1) - dont change saturation
+			{
+				for (int i = 0; i < numVAOs; i++)
+				{
+					glUseProgram(*shaderProg[triangleColors[i]]);					// determine which shader program to draw with
+					vertexSatLocation = glGetUniformLocation(*shaderProg[triangleColors[i]], "saturation");
+					glUniform1f(vertexSatLocation, satValue);
+					glBindVertexArray(VAO[i]);
+					glDrawArrays(GL_TRIANGLES, 0, 3);
+					glBindVertexArray(0);
+				}
 			}
 		}
 		
