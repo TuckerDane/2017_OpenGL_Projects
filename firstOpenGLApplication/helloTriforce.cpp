@@ -500,7 +500,7 @@ void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int 
 
 		// render
 		//---------------------------------
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		// draw to the window buffer
