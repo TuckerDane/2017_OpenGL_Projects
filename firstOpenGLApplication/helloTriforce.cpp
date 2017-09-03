@@ -31,9 +31,12 @@ const unsigned int	SCR_HEIGHT = 600;
 // vertices
 const char *vertexShaderSource = "#version 330 core\n"
 	"layout (location = 0) in vec3 aPos;\n"
+	"layout (location = 1) in vec3 aColor;\n"
+	"out vec3 ourColor;\n"
 	"void main()\n"
 	"{\n"
 	"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+	"	ourColor = aColor;\n"
 	"}\0";
 
 // blue fragment shader
@@ -63,8 +66,18 @@ const char *fragmentShader2Source = "#version 330 core\n"
 "   FragColor = vec4(saturation, 0.0f, 0.0f, 1.0f);\n"
 "}\n\0";
 
-// white fragment shader
+// interpolated fragment shader
 const char *fragmentShader3Source = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"in vec3 ourColor;\n"
+"uniform float saturation;\n"
+"void main()\n"
+"{\n"
+"   FragColor = vec4(saturation*ourColor, 1.0f);\n"
+"}\n\0";
+
+// white fragment shader
+const char *fragmentShader4Source = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
@@ -89,16 +102,17 @@ int main()
 	// make shaders
 	//---------------------------------
 	unsigned int * vertexShader = makeShader(&vertexShaderSource, 0, trashcan);		// vertex shader
-	unsigned int * fragmentShaders[4];												// array to store the fragmentShaders
-	fragmentShaders[0] = makeShader(&fragmentShader0Source, 1, trashcan);			// fragment shaders assigned to array
-	fragmentShaders[1] = makeShader(&fragmentShader1Source, 1, trashcan);
-	fragmentShaders[2] = makeShader(&fragmentShader2Source, 1, trashcan);
-	fragmentShaders[3] = makeShader(&fragmentShader3Source, 1, trashcan);
+	unsigned int * fragmentShaders[5];												// array to store the fragmentShaders
+	fragmentShaders[0] = makeShader(&fragmentShader0Source, 1, trashcan);			// blue
+	fragmentShaders[1] = makeShader(&fragmentShader1Source, 1, trashcan);			// yellow
+	fragmentShaders[2] = makeShader(&fragmentShader2Source, 1, trashcan);			// red
+	fragmentShaders[3] = makeShader(&fragmentShader3Source, 1, trashcan);			// interpolated
+	fragmentShaders[4] = makeShader(&fragmentShader4Source, 1, trashcan);			// white
 
 	// make shader program
 	//---------------------------------
-	unsigned int * shaderPrograms[4];
-	for (int i = 0; i < 4; i++)
+	unsigned int * shaderPrograms[5];
+	for (int i = 0; i < 5; i++)
 	{
 		shaderPrograms[i] = makeShaderProgram(vertexShader, fragmentShaders[i], trashcan);	// linking fragment shader(s) to vertex shader(s)
 	}
@@ -296,23 +310,26 @@ unsigned int ** makeVAOs(DynArr* trash, int numVAOs)
 
 	// first triangle (Top)
 	float triangle1[] = {
-		0.00f,	0.50f,	0.00f,
-		-0.25f,	0.00f,	0.00f,
-		0.25f, 0.00f,	0.00f
+		// positions			// colors
+		 0.0f,	0.5f, 0.0f,		1.0f, 0.0f, 0.0f,
+		-0.25f,	0.0f, 0.0f,		0.0f, 1.0f, 0.0f,
+		 0.25f,	0.0f, 0.0f,		0.0f, 0.0f, 1.0f
 	};
 
 	//	second triangle (Left)
 	float triangle2[] = {
-		-0.25f,	 0.00f,	0.00f,
-		-0.50f,	-0.50f,	0.00f,
-		 0.00f, -0.50f,	0.00f
+		// positions			// colors
+		-0.25f,	 0.00f,	0.00f,	1.0f,	0.0f, 0.0f,
+		-0.50f,	-0.50f,	0.00f,	0.0f,	1.0f, 0.0f,
+		 0.00f, -0.50f,	0.00f,	0.0f,	0.0f, 1.0f
 	};
 
 	//	third triangle (Right)
 	float triangle3[] = {
-		0.25f,	 0.00f,	0.00f,
-		0.00f,	-0.50f,	0.00f,
-		0.50f,  -0.50f,	0.00f
+		// positions			// colors
+		0.25f,	 0.00f,	0.00f,	1.0f,	0.0f, 0.0f,
+		0.00f,	-0.50f,	0.00f,	0.0f,	1.0f, 0.0f,
+		0.50f,  -0.50f,	0.00f,	0.0f,	0.0f, 1.0f
 	};
 
 	//	all triangles
@@ -345,11 +362,18 @@ unsigned int ** makeVAOs(DynArr* trash, int numVAOs)
 
 		// copy vertices into a buffer for OpenGL to use
 		glBindBuffer(GL_ARRAY_BUFFER, VBOs[i]);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(triangles) * 3, triangles[i], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(triangles) * 6, triangles[i], GL_STATIC_DRAW);
 
 		// set the vertex attributes pointers
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+		// position attribute
 		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+
+		// color attribute
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+
 	}
 
 	// return address to the VAOs array
@@ -403,15 +427,18 @@ void processInput(GLFWwindow *window, int * fPtr, int * tPtr, int * bPtr)
 	{
 		*fPtr = 2;
 	}
-
-	/* 
-
-	//else if the user presses '4', switch to the White Shader
+	
+	//else if the user presses '4', switch to the Interpolated Shader
 	else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
 	{
 		*fPtr = 3;
 	}
-																*/
+	/*													
+	// else if the user presses '5', switch to the White Shader
+	else if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS)
+	{
+		*fPtr = 4;
+	}														*/
 
 	// change between triangles
 	//---------------------------------
@@ -542,7 +569,7 @@ void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int 
 			{
 				if (i == 0)
 				{
-					glUseProgram(*shaderProg[3]);					// use the white shader on the top triangle
+					glUseProgram(*shaderProg[4]);					// use the white shader on the top triangle
 					glBindVertexArray(VAO[i]);
 					glDrawArrays(GL_TRIANGLES, 0, 3);
 					glBindVertexArray(0);
@@ -564,7 +591,7 @@ void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int 
 			{
 				if (i == 1)
 				{
-					glUseProgram(*shaderProg[3]);					// use the white shader on the left triangle
+					glUseProgram(*shaderProg[4]);					// use the white shader on the left triangle
 					glBindVertexArray(VAO[i]);
 					glDrawArrays(GL_TRIANGLES, 0, 3);
 					glBindVertexArray(0);
@@ -586,7 +613,7 @@ void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int 
 			{
 				if (i == 2)
 				{
-					glUseProgram(*shaderProg[3]);					// use the white shader on the right triangle
+					glUseProgram(*shaderProg[4]);					// use the white shader on the right triangle
 					glBindVertexArray(VAO[i]);
 					glDrawArrays(GL_TRIANGLES, 0, 3);
 					glBindVertexArray(0);
