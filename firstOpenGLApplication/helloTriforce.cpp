@@ -9,6 +9,7 @@
 //***********************************************************************************************************************/
 
 #include "helloTriforce.h"
+#include "shader.h"
 #include <assert.h>
 
 // tool for debugging
@@ -24,65 +25,6 @@
 // size of the window to render triforce/shapes to
 const unsigned int	SCR_WIDTH = 800;
 const unsigned int	SCR_HEIGHT = 600;
-
-// shader implementations
-//---------------------------------
-
-// vertices
-const char *vertexShaderSource = "#version 330 core\n"
-	"layout (location = 0) in vec3 aPos;\n"
-	"layout (location = 1) in vec3 aColor;\n"
-	"out vec3 ourColor;\n"
-	"void main()\n"
-	"{\n"
-	"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-	"	ourColor = aColor;\n"
-	"}\0";
-
-// blue fragment shader
-const char *fragmentShader0Source = "#version 330 core\n"
-	"out vec4 FragColor;\n"
-	"uniform float saturation;\n"
-	"void main()\n"
-	"{\n"
-	"   FragColor = vec4(0.0f, 0.0f, saturation, 1.0f);\n"
-	"}\n\0";
-
-// yellow fragment shader
-const char *fragmentShader1Source = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"uniform float saturation;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(saturation, saturation, 0.0f, 1.0f);\n"
-"}\n\0";
-
-// red fragment shader
-const char *fragmentShader2Source = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"uniform float saturation;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(saturation, 0.0f, 0.0f, 1.0f);\n"
-"}\n\0";
-
-// interpolated fragment shader
-const char *fragmentShader3Source = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"in vec3 ourColor;\n"
-"uniform float saturation;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(saturation*ourColor, 1.0f);\n"
-"}\n\0";
-
-// white fragment shader
-const char *fragmentShader4Source = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
-"}\n\0";
 
 int main()
 {
@@ -101,14 +43,14 @@ int main()
 
 	// make shaders
 	//---------------------------------
-	unsigned int * vertexShader = makeShader(&vertexShaderSource, 0, trashcan);		// vertex shader
-	unsigned int * fragmentShaders[5];												// array to store the fragmentShaders
-	fragmentShaders[0] = makeShader(&fragmentShader0Source, 1, trashcan);			// blue
-	fragmentShaders[1] = makeShader(&fragmentShader1Source, 1, trashcan);			// yellow
-	fragmentShaders[2] = makeShader(&fragmentShader2Source, 1, trashcan);			// red
-	fragmentShaders[3] = makeShader(&fragmentShader3Source, 1, trashcan);			// interpolated
-	fragmentShaders[4] = makeShader(&fragmentShader4Source, 1, trashcan);			// white
-
+	unsigned int * vertexShader = makeShader("shaders/vertexShader1.vs.txt", 0, trashcan);		// vertex shader
+	unsigned int * fragmentShaders[5];															// array to store the fragmentShaders
+	fragmentShaders[0] = makeShader("shaders/fragmentShader0.fs.txt", 1, trashcan);				// blue
+	fragmentShaders[1] = makeShader("shaders/fragmentShader1.fs.txt", 1, trashcan);				// yellow
+	fragmentShaders[2] = makeShader("shaders/fragmentShader2.fs.txt", 1, trashcan);				// red
+	fragmentShaders[3] = makeShader("shaders/fragmentShader3.fs.txt", 1, trashcan);				// interpolated
+	fragmentShaders[4] = makeShader("shaders/fragmentShader4.fs.txt", 1, trashcan);				// white
+	
 	// make shader program
 	//---------------------------------
 	unsigned int * shaderPrograms[5];
@@ -211,8 +153,32 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 //	@param:		trash		the global trashcan for garbage collection
 //	@return:	shadr		returns the reference ID to the shader
 //-------------------------------------------------------------------
-unsigned int * makeShader(const char** shaderSrc, int i, DynArr* trash)
+unsigned int * makeShader(const char* shaderSrc, int i, DynArr* trash)
 {
+	// get shader source code from filepath
+	std::string shaderCode;
+	std::ifstream shaderFile;
+
+	// ensure ifsteram objects can throw exceptions
+	shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	try
+	{
+		// open files
+		shaderFile.open(shaderSrc);
+		std::stringstream shaderStream;
+		// read the file's buffer contents into streams
+		shaderStream << shaderFile.rdbuf();
+		// close file handlers
+		shaderFile.close();
+		// convert stream into string
+		shaderCode = shaderStream.str();
+	}
+	catch (std::ifstream::failure e)
+	{
+		std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ" << std::endl;
+	}
+	const char * sCode = shaderCode.c_str();
+
 	// initialize a shader
 	unsigned int * shadr = NULL;
 	shadr = new unsigned int;
@@ -232,7 +198,7 @@ unsigned int * makeShader(const char** shaderSrc, int i, DynArr* trash)
 	}
 
 	// attach shader source code to the shader object and compile
-	glShaderSource(*shadr, 1, shaderSrc, NULL);
+	glShaderSource(*shadr, 1, &sCode, NULL);
 	glCompileShader(*shadr);
 
 	// check for compilation errors:

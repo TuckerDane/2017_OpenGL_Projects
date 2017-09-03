@@ -13,6 +13,9 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <string>
+#include <fstream>
+#include <sstream>
 #include <iostream>
 #include "dynamicArray.c"
 
@@ -28,7 +31,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);						
 
 // SHADERS / VAOs
 //---------------------------------
-unsigned int * makeShader(const char** shaderSrc, int i, DynArr* trash);						// creates a shader given a shader source
+unsigned int * makeShader(const char* shaderSrc, int i, DynArr* trash);							// creates a shader given a shader source
 unsigned int * makeShaderProgram(unsigned int* vShader, unsigned int* fShader, DynArr* trash);	// creates a shader program
 unsigned int ** makeVAOs(DynArr* trash, int numVAOs);											// creates VAOs
 

@@ -39,4 +39,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="shaders\fragmentShader0.fs.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="shaders\fragmentShader1.fs.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="shaders\fragmentShader2.fs.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="shaders\fragmentShader3.fs.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="shaders\fragmentShader4.fs.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="shaders\vertexShader1.vs.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+  </ItemGroup>
 </Project>
