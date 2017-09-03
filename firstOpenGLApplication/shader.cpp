@@ -17,8 +17,9 @@ unsigned int ID;
 
 // constructor reads and builds the shader
 //---------------------------------
-Shader(const GLchar* vertexPath, const GLchar* fragmentPath)
+Shader::Shader(const char * vertexPath, const char * fragmentPath)
 {
+
 	// 1. retrieve the vertex/fragment source code from filepath
 	//---------------------------------
 
@@ -43,8 +44,8 @@ Shader(const GLchar* vertexPath, const GLchar* fragmentPath)
 		vShaderFile.close();
 		fShaderFile.close();
 		// convert stream into string
-		vertexCode		= vShaderStream.str();
-		fragmentCode	= fShaderStream.str();
+		vertexCode = vShaderStream.str();
+		fragmentCode = fShaderStream.str();
 	}
 	catch (std::ifstream::failure e)
 	{
@@ -56,7 +57,7 @@ Shader(const GLchar* vertexPath, const GLchar* fragmentPath)
 	// 2. compile shaders
 	//---------------------------------
 	unsigned int vertex, fragment;
-	int success;
+	int success =0;
 	char infoLog[512];
 
 	// vertex Shader
@@ -101,22 +102,22 @@ Shader(const GLchar* vertexPath, const GLchar* fragmentPath)
 
 // use/activate the shader
 //---------------------------------
-void use()
+void Shader::use()
 {
 	glUseProgram(ID);
 }
 
 // utility uniform functions
 //---------------------------------
-void setBool(const std::string &name, bool value) const
+void Shader::setBool(const std::string &name, bool value) const
 {
 	glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
 }
-void setInt(const std::string &name, int value) const
+void Shader::setInt(const std::string &name, int value) const
 {
 	glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
 }
-void setFloat(const std::string &name, float value) const
+void Shader::setFloat(const std::string &name, float value) const
 {
 	glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
 }

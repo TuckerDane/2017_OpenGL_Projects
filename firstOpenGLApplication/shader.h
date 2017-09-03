@@ -16,6 +16,7 @@
 
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <iostream>
 
@@ -28,7 +29,7 @@ public:
 
 	// constructor reads and builds the shader
 	//---------------------------------
-	Shader(const GLchar* vertexPath, const GLchar* fragmentPath);
+	Shader(const char* vertexPath, const char* fragmentPath);
 
 	// use/activate the shader
 	//---------------------------------
