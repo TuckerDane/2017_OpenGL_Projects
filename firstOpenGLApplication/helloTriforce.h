@@ -29,16 +29,15 @@ void initWindow();																				// initializes GLFW Window
 GLFWwindow* makeWindow(int width, int height, char* name);										// create window object
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);						// handles window resizing
 
-// SHADERS / VAOs
+// Shaders / VAOs
 //---------------------------------
-unsigned int * makeShader(const char* shaderSrc, int i, DynArr* trash);							// creates a shader given a shader source
-unsigned int * makeShaderProgram(unsigned int* vShader, unsigned int* fShader, DynArr* trash);	// creates a shader program
+//Shader * makeShader(const char * vertexPath, const char * fragmentPath);						// makes and returns a pointer to a shader program
 unsigned int ** makeVAOs(DynArr* trash, int numVAOs);											// creates VAOs
 
 // RENDERING
 //---------------------------------
 void processInput(GLFWwindow *window, int * fPtr, int *tPtr, int *bPtr);						// processes when keys are pressed/released and responds
-void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int numVAOs);		// render loop
+void render(GLFWwindow* win, unsigned int * shaderProg[], unsigned int* VAO, int numVAOs);		// render loop
 
 //	GARBAGE COLLECTION
 //---------------------------------

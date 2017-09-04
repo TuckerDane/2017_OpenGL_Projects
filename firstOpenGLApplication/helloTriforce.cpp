@@ -41,23 +41,31 @@ int main()
 	GLFWwindow *window = makeWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOPenGL"); 	// create a window object
 	initGLAD();																// initialize GLAD to manage function pointers for OpenGL
 
-	// make shaders
+	// make shader programs
 	//---------------------------------
-	unsigned int * vertexShader = makeShader("shaders/vertexShader1.vs.txt", 0, trashcan);		// vertex shader
-	unsigned int * fragmentShaders[5];															// array to store the fragmentShaders
-	fragmentShaders[0] = makeShader("shaders/fragmentShader0.fs.txt", 1, trashcan);				// blue
-	fragmentShaders[1] = makeShader("shaders/fragmentShader1.fs.txt", 1, trashcan);				// yellow
-	fragmentShaders[2] = makeShader("shaders/fragmentShader2.fs.txt", 1, trashcan);				// red
-	fragmentShaders[3] = makeShader("shaders/fragmentShader3.fs.txt", 1, trashcan);				// interpolated
-	fragmentShaders[4] = makeShader("shaders/fragmentShader4.fs.txt", 1, trashcan);				// white
 	
-	// make shader program
-	//---------------------------------
-	unsigned int * shaderPrograms[5];
-	for (int i = 0; i < 5; i++)
-	{
-		shaderPrograms[i] = makeShaderProgram(vertexShader, fragmentShaders[i], trashcan);	// linking fragment shader(s) to vertex shader(s)
-	}
+	Shader * sProgs[5];
+	unsigned int * sProgIDs[5];
+
+
+	Shader sProg0("shaders/vertexShader1.vs.txt", "shaders/fragmentShader0.fs.txt");
+	Shader sProg1("shaders/vertexShader1.vs.txt", "shaders/fragmentShader1.fs.txt");
+	Shader sProg2("shaders/vertexShader1.vs.txt", "shaders/fragmentShader2.fs.txt");
+	Shader sProg3("shaders/vertexShader1.vs.txt", "shaders/fragmentShader3.fs.txt");
+	Shader sProg4("shaders/vertexShader1.vs.txt", "shaders/fragmentShader4.fs.txt");
+	
+	sProgs[0] = &sProg0;
+	sProgs[1] = &sProg1;
+	sProgs[2] = &sProg2;
+	sProgs[3] = &sProg3;
+	sProgs[4] = &sProg4;
+
+
+	sProgIDs[0] = &sProg0.ID;
+	sProgIDs[1] = &sProg1.ID;
+	sProgIDs[2] = &sProg2.ID;
+	sProgIDs[3] = &sProg3.ID;
+	sProgIDs[4] = &sProg4.ID;
 
 	// make VAO
 	//---------------------------------
@@ -65,7 +73,7 @@ int main()
 
 	// render loop
 	//---------------------------------
-	render(window, shaderPrograms, *VAOs, 3);
+	render(window, sProgIDs, *VAOs, 3);
 
 	// garbage collection
 	//---------------------------------
@@ -143,123 +151,18 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 //-------------------------------------------------------------------
-// creates a shader given a shader source
+//	Creates a shader program
 //
-//	@param:		shaderSrc	the source code for the shader written
-//							in GLSL (Graphics Library Shader Language)
-//	@param:		i			indicates the type of shader
-//								0 == vertex shader
-//								1 == fragment shader
-//	@param:		trash		the global trashcan for garbage collection
-//	@return:	shadr		returns the reference ID to the shader
+//	@param:		vertexPath			filepath to the vertex shader
+//	@param:		fragmentPath		filepath to the fragment shader
+//	@return:	newShader			the new shader program
 //-------------------------------------------------------------------
-unsigned int * makeShader(const char* shaderSrc, int i, DynArr* trash)
+/*Shader * makeShader(const char * vertexPath, const char * fragmentPath)
 {
-	// get shader source code from filepath
-	std::string shaderCode;
-	std::ifstream shaderFile;
-
-	// ensure ifsteram objects can throw exceptions
-	shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-	try
-	{
-		// open files
-		shaderFile.open(shaderSrc);
-		std::stringstream shaderStream;
-		// read the file's buffer contents into streams
-		shaderStream << shaderFile.rdbuf();
-		// close file handlers
-		shaderFile.close();
-		// convert stream into string
-		shaderCode = shaderStream.str();
-	}
-	catch (std::ifstream::failure e)
-	{
-		std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ" << std::endl;
-	}
-	const char * sCode = shaderCode.c_str();
-
-	// initialize a shader
-	unsigned int * shadr = NULL;
-	shadr = new unsigned int;
-
-	// tag the shader for garbage collection
-	addDynArr(trash, shadr);
-
-	// if i is 0, create a vertex shader
-	if (i == 0)
-	{
-		*shadr = glCreateShader(GL_VERTEX_SHADER);
-	}
-	// otherwise if i is 1, create a fragment shader
-	else if (i == 1)
-	{
-		*shadr = glCreateShader(GL_FRAGMENT_SHADER);
-	}
-
-	// attach shader source code to the shader object and compile
-	glShaderSource(*shadr, 1, &sCode, NULL);
-	glCompileShader(*shadr);
-
-	// check for compilation errors:
-	int success;
-	char infoLog[512];
-	glGetShaderiv(*shadr, GL_COMPILE_STATUS, &success);
-
-	// print error message if compilation errors exist
-	if (!success)
-	{
-		glGetShaderInfoLog(*shadr, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-
-	// return reference ID to the new shader
-	return shadr;
-}
-
-//-------------------------------------------------------------------
-// shader program
-//
-//	@param:		vShader		reference ID to the vertex shader to be 
-//							used in the shader program
-//	@param:		fShader		reference ID to the fragment shader to 
-//							be used in the program
-//	@param:		trash		the global trashcan for garbage colleciton
-//	@return:	sProg		returns the reference ID to the Shader
-//							Program
-//-------------------------------------------------------------------
-unsigned int * makeShaderProgram(unsigned int* vShader, unsigned int* fShader, DynArr* trash)
-{
-	// initialize shader program
-	unsigned int * sProg = NULL;
-	sProg = new unsigned int;
-	addDynArr(trash, sProg);
-	*sProg = glCreateProgram();
-
-	// link precompiled shaders to shader program
-	glAttachShader(*sProg, *vShader);
-	glAttachShader(*sProg, *fShader);
-	glLinkProgram(*sProg);
-
-	// check for linker errors
-	int success;
-	char infoLog[512];
-	glGetProgramiv(*sProg, GL_LINK_STATUS, &success);
-
-	// print error message if linking errors exist
-	if (!success)
-	{
-		glGetProgramInfoLog(*sProg, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-	}
-
-	// garbage collection on shader objects
-	glDeleteShader(*vShader);
-	glDeleteShader(*fShader);
-
-	// return reference ID to the new Shader Program
-	return sProg;
-}
+	Shader newShader(vertexPath, fragmentPath);
+	Shader * nShader = &newShader;
+	return nShader;
+}*/
 
 //-------------------------------------------------------------------
 // vertex data :: buffer(s) :: vertex attributes
@@ -462,7 +365,7 @@ void processInput(GLFWwindow *window, int * fPtr, int * tPtr, int * bPtr)
 //	@param:		VAO			reference ID to a Virtual Array Object
 //	@param:		numVAOs		the number of VAOs being passed
 //-------------------------------------------------------------------
-void render(GLFWwindow* win, unsigned int* shaderProg[], unsigned int* VAO, int numVAOs)
+void render(GLFWwindow* win, unsigned int * shaderProg[], unsigned int* VAO, int numVAOs)
 {
 	// determines which fragmentation shader is in current use
 	//---------------------------------
