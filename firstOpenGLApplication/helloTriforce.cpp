@@ -8,15 +8,18 @@
 //
 //***********************************************************************************************************************/
 
+#define _CRTDBG_MAP_ALLOC
+#include<iostream>
+#include <crtdbg.h>
+#ifdef _DEBUG
+#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#define new DEBUG_NEW
+#endif
+
 #include "helloTriforce.h"
 #include "shader.h"
 #include <assert.h>
 
-// tool for debugging
-#define _CRTDBG_MAP_ALLOC
-#ifndef _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#endif
 
 //-------------------------------------------------------------------
 //	settings
@@ -28,13 +31,16 @@ const unsigned int	SCR_HEIGHT = 600;
 
 int main()
 {
+	// tool for debugging
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
 	// trashcan used for dynamic memory cleanup
 	//---------------------------------
 	DynArr * trashcan = NULL;
 	trashcan = new DynArr;
 	assert(trashcan != 0);
 	initDynArr(trashcan, 10);
-	
+
 	// make window
 	//---------------------------------
 	initWindow();															// initialize GLFW Window
@@ -44,28 +50,22 @@ int main()
 	// make shader programs
 	//---------------------------------
 	
-	Shader * sProgs[5];
-	unsigned int * sProgIDs[5];
+	std::string filePath;			// holds filepath for fragment shader
+	Shader shaders[5];				// holds all of the shader programs
+	unsigned int * sProgIDs[5];		// holds the shader program IDs
 
-
-	Shader sProg0("shaders/vertexShader1.vs.txt", "shaders/fragmentShader0.fs.txt");
-	Shader sProg1("shaders/vertexShader1.vs.txt", "shaders/fragmentShader1.fs.txt");
-	Shader sProg2("shaders/vertexShader1.vs.txt", "shaders/fragmentShader2.fs.txt");
-	Shader sProg3("shaders/vertexShader1.vs.txt", "shaders/fragmentShader3.fs.txt");
-	Shader sProg4("shaders/vertexShader1.vs.txt", "shaders/fragmentShader4.fs.txt");
-	
-	sProgs[0] = &sProg0;
-	sProgs[1] = &sProg1;
-	sProgs[2] = &sProg2;
-	sProgs[3] = &sProg3;
-	sProgs[4] = &sProg4;
-
-
-	sProgIDs[0] = &sProg0.ID;
-	sProgIDs[1] = &sProg1.ID;
-	sProgIDs[2] = &sProg2.ID;
-	sProgIDs[3] = &sProg3.ID;
-	sProgIDs[4] = &sProg4.ID;
+	for (int i = 0; i < 5; i++)
+	{
+		// put the filepath into a string
+		filePath = "shaders/fragmentShader";
+		filePath += (i+48);
+		filePath += ".fs.txt";
+		const char* fPath = filePath.c_str();
+		Shader sProg("shaders/vertexShader1.vs.txt", fPath);
+		shaders[i] = sProg;
+		sProgIDs[i] = &shaders[i].ID;
+		filePath.clear();
+	}	
 
 	// make VAO
 	//---------------------------------
@@ -79,10 +79,6 @@ int main()
 	//---------------------------------
 	emptyTrashCan(trashcan);
 	glfwTerminate();
-	
-	// tool for debugging
-	//---------------------------------
-	_CrtDumpMemoryLeaks();
 
 	return 0;
 }
@@ -149,20 +145,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }
-
-//-------------------------------------------------------------------
-//	Creates a shader program
-//
-//	@param:		vertexPath			filepath to the vertex shader
-//	@param:		fragmentPath		filepath to the fragment shader
-//	@return:	newShader			the new shader program
-//-------------------------------------------------------------------
-/*Shader * makeShader(const char * vertexPath, const char * fragmentPath)
-{
-	Shader newShader(vertexPath, fragmentPath);
-	Shader * nShader = &newShader;
-	return nShader;
-}*/
 
 //-------------------------------------------------------------------
 // vertex data :: buffer(s) :: vertex attributes

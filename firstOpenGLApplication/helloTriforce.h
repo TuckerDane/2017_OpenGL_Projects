@@ -29,9 +29,8 @@ void initWindow();																				// initializes GLFW Window
 GLFWwindow* makeWindow(int width, int height, char* name);										// create window object
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);						// handles window resizing
 
-// Shaders / VAOs
+// VAOs
 //---------------------------------
-//Shader * makeShader(const char * vertexPath, const char * fragmentPath);						// makes and returns a pointer to a shader program
 unsigned int ** makeVAOs(DynArr* trash, int numVAOs);											// creates VAOs
 
 // RENDERING

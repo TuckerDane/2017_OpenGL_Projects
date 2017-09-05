@@ -17,6 +17,14 @@ unsigned int ID;
 
 // constructor reads and builds the shader
 //---------------------------------
+Shader::Shader()
+{
+	ID = -1;
+}
+Shader::~Shader()
+{
+
+}
 Shader::Shader(const char * vertexPath, const char * fragmentPath)
 {
 
@@ -107,6 +115,10 @@ Shader::Shader(const char * vertexPath, const char * fragmentPath)
 void Shader::use()
 {
 	glUseProgram(ID);
+}
+Shader Shader::makeShader(const char * vertexPath, const char * fragmentPath)
+{
+	return Shader(vertexPath, fragmentPath);
 }
 
 // utility uniform functions
