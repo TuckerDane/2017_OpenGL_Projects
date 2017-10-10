@@ -126,6 +126,7 @@
     <ClInclude Include="dynArray.h" />
     <ClInclude Include="helloTriforce.h" />
     <ClInclude Include="shader.h" />
+    <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="shaders\fragmentShader0.fs.txt" />
